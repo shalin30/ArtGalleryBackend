@@ -8,17 +8,21 @@ import org.example.mapper.ArtPieceResponseMapper;
 import org.example.repository.ArtCategoryRepository;
 import org.example.repository.ArtPieceRepository;
 import org.example.repository.OrderItemsRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -35,6 +39,9 @@ public class ArtPieceOrchestratorService extends BaseFieldValidationService {
 
     @Autowired
     ArtPieceFieldValidationService artPieceFieldValidationService;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     @Autowired
     ArtPieceResponseMapper mapper;
@@ -60,7 +67,11 @@ public class ArtPieceOrchestratorService extends BaseFieldValidationService {
             artPiece.setTitle(request.getTitle());
             artPiece.setDescription(request.getDescription());
             artPiece.setPrice(request.getPrice().setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue());
-            artPiece.setImageUrl(request.getImageUrl());
+            artPiece.setImageUrl(null);
+            artPiece.setArtist(request.getArtist());
+            artPiece.setYear(Integer.valueOf(request.getYear()));
+            artPiece.setDimensions(request.getDimensions());
+            artPiece.setMedium(request.getMedium());
             artPiece.setCreatedAt(LocalDateTime.now());
             artPiece.setModifiedAt(LocalDateTime.now());
 
@@ -81,6 +92,24 @@ public class ArtPieceOrchestratorService extends BaseFieldValidationService {
         return response;
     }
 
+    public String uploadImageAndSetUrl(Integer artId, MultipartFile file) throws IOException {
+        ArtPiece artPiece = artPieceRepository.findByArtId(artId);
+        if (artPiece == null) {
+            return null;
+        }
+
+        Map<String, Object> options = new HashMap<>();
+        options.put("max_file_size", 10485760);
+
+        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+        String imageUrl = uploadResult.get("url").toString();
+
+        artPiece.setImageUrl(imageUrl);
+        artPieceRepository.save(artPiece);
+
+        return imageUrl;
+    }
+
     public ArtPieceResponse updateArtPiece(ArtPieceRequest request, String traceId){
         log.info("updateArtPiece started, traceId: {}", traceId);
         ArtPieceResponse response;
@@ -94,7 +123,10 @@ public class ArtPieceOrchestratorService extends BaseFieldValidationService {
                 if(request.getTitle() != null) artPiece.setTitle(request.getTitle());
                 if(request.getDescription() != null) artPiece.setDescription(request.getDescription());
                 if(request.getPrice() != null) artPiece.setPrice(request.getPrice().setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue());
-                if(request.getImageUrl() != null) artPiece.setImageUrl(request.getImageUrl());
+                if(request.getArtist() != null) artPiece.setArtist(request.getArtist());
+                if(request.getYear() != null) artPiece.setYear(Integer.valueOf(request.getYear()));
+                if(request.getDimensions() != null) artPiece.setDimensions(request.getDimensions());
+                if(request.getMedium() != null) artPiece.setMedium(request.getMedium());
                 artPiece.setModifiedAt(LocalDateTime.now());
 
                 if(request.getCategoryId() != null) {
@@ -131,6 +163,7 @@ public class ArtPieceOrchestratorService extends BaseFieldValidationService {
 
         }
         response.setStatus(HttpStatus.NOT_FOUND);
+        response.setMessage("No Art Pieces found for this Categories");
         responses.add(response);
         log.info("getArtPieces ended, traceId: {}", traceId);
         return responses;
@@ -175,11 +208,16 @@ public class ArtPieceOrchestratorService extends BaseFieldValidationService {
 
     private ArtPieceResponse convertToDTO(ArtPiece artPiece){
         ArtPieceResponse response =  new ArtPieceResponse();
-        response.setArtId(String.valueOf(artPiece.getArtId()));
+        response.setArtId(artPiece.getArtId());
         response.setTitle(artPiece.getTitle());
         response.setDescription(artPiece.getDescription());
         response.setPrice(artPiece.getPrice());
         response.setImageUrl(artPiece.getImageUrl());
+        response.setArtist(artPiece.getArtist());
+        response.setYear(artPiece.getYear().toString());
+        response.setDimensions(artPiece.getDimensions());
+        response.setMedium(artPiece.getMedium());
+        response.setCategory(artPiece.getCategory().getName());
         return response;
     }
 }

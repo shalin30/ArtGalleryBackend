@@ -13,6 +13,10 @@ public class ArtPieceRequest {
     private BigDecimal price;
     private String imageUrl;
     private String categoryId;
+    private String artist;
+    private String year;
+    private String medium;
+    private String dimensions;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.persistence.criteria.CriteriaBuilder;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +29,14 @@ public class ArtPiece {
     private Double price;
     @Column(name = "image_url")
     private String imageUrl;
+    @Column(name = "artist")
+    private String artist;
+    @Column(name = "year")
+    private Integer year;
+    @Column(name = "dimensions")
+    private String dimensions;
+    @Column(name = "medium")
+    private String medium;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -44,4 +53,7 @@ public class ArtPiece {
 
     @OneToMany(mappedBy = "artPiece", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
+
+    @OneToMany(mappedBy = "artPiece", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Cart> cartItems;
 }

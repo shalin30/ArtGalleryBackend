@@ -7,16 +7,12 @@ import org.example.service.OrderOrchestratorService;
 import org.example.service.PasswordResetService;
 import org.example.service.PurchaseHistoryOrchestratorService;
 import org.example.service.UserOrchestratorService;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @Slf4j
@@ -62,20 +58,21 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestParam String username,
+    public ResponseEntity<LoginResponse> login(@RequestParam String username,
                                                      @RequestParam String password,
                                                      @RequestHeader(required = false, name = "TraceId") String traceId) {
         log.info("Login Controller started, traceId : {}", traceId);
-        String token = userOrchestratorService.login(username, password, traceId);
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
+        LoginResponse response = userOrchestratorService.login(username, password, traceId);
+//        response.put("token", token);
         log.info("Login Controller ended, traceId : {}", traceId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<UserCreationResponse> logout(@RequestHeader("Authorization") String authHeader, @RequestHeader(required = false, name = "TraceId") String traceId) {
-        UserCreationResponse response =  userOrchestratorService.logout(authHeader, traceId);
+    public ResponseEntity<LogoutResponse> logout(@RequestHeader("Authorization") String authHeader, @RequestHeader(required = false, name = "TraceId") String traceId) {
+        log.info("Log out controller started, traceId : {}", traceId);
+        LogoutResponse response =  userOrchestratorService.logout(authHeader, traceId);
+        log.info("Log out controller ended, traceId : {}", traceId);
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
@@ -158,6 +155,15 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    }
+
+    @GetMapping("/user/address/{userId}")
+    public ResponseEntity<UserAddressResponse> getUserAddress(@PathVariable String userId,
+                                                                   @RequestHeader(required = false, name = "TraceId") String traceId){
+        log.info("getUserAddress Controller started, traceId : {}", traceId);
+        UserAddressResponse response = orderOrchestratorService.getUserAddress(userId,traceId);
+        log.info("getUserAddress Controller ended, traceId : {}", traceId);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     @PostMapping("/forgot-password")

@@ -181,18 +181,31 @@ class UserControllerTest {
 
     @Test
     public void testLogin(){
-        Mockito.when(userOrchestratorService.login(anyString(), anyString(), anyString())).thenReturn("response");
-        ResponseEntity<Map<String, String>> passwordResetResponse = controller.login("email", "password", traceId);
-        Assertions.assertEquals("response", Objects.requireNonNull(passwordResetResponse.getBody()).get("token"));
+        LoginResponse response = new LoginResponse();
+        response.setUserId("test user");
+        response.setToken("test token");
+        response.setStatus(HttpStatus.OK);
+        Mockito.when(userOrchestratorService.login(anyString(), anyString(), anyString())).thenReturn(response);
+        ResponseEntity<LoginResponse> passwordResetResponse = controller.login("email", "password", traceId);
+        Assertions.assertEquals("test token", Objects.requireNonNull(passwordResetResponse.getBody()).getToken());
     }
 
     @Test
     public void testLogout(){
-        UserCreationResponse response = new UserCreationResponse();
+        LogoutResponse response = new LogoutResponse();
         response.setMessage("test message");
         response.setStatus(HttpStatus.OK);
         Mockito.when(userOrchestratorService.logout(anyString(), anyString())).thenReturn(response);
-        ResponseEntity<UserCreationResponse> passwordResetResponse = controller.logout("authHeader",  traceId);
+        ResponseEntity<LogoutResponse> passwordResetResponse = controller.logout("authHeader",  traceId);
         Assertions.assertEquals("test message", Objects.requireNonNull(passwordResetResponse.getBody()).getMessage());
+    }
+
+    @Test
+    public void testGetUserAddress(){
+        UserAddressResponse response = new UserAddressResponse();
+        response.setStatus(HttpStatus.OK);
+        Mockito.when(orderOrchestratorService.getUserAddress(anyString(), anyString())).thenReturn(response);
+        ResponseEntity<UserAddressResponse> userAddressResponse = controller.getUserAddress("1", traceId);
+        Assertions.assertEquals(HttpStatus.OK, Objects.requireNonNull(userAddressResponse.getBody()).getStatus());
     }
 }

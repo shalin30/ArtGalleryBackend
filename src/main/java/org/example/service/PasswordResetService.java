@@ -10,6 +10,8 @@ import org.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -50,8 +52,8 @@ public class PasswordResetService {
         PasswordResetToken resetToken = new PasswordResetToken(user, token, new Date(System.currentTimeMillis() + 3600000));
         tokenRepository.save(resetToken);
 
-        String resetLink = "http://localhost:8080/reset-password?token=" + token;
-        emailService.sendEmail(user.getEmail(), "Password Reset Request", "Click here to reset your password: " + resetLink);
+        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        emailService.sendEmail(user.getEmail(), "Password Reset Request", "Click here to reset your password: " + resetLink, false);
         response = passwordResetMapper.mapSuccessResponse(traceId);
         log.info("sendPasswordResetLink ended, traceId : {}", traceId);
         return response;
@@ -59,25 +61,25 @@ public class PasswordResetService {
 
     public PasswordResetResponse resetPassword(String token, String newPassword, String traceId) {
         log.info("resetPassword started, traceId : {}", traceId);
+        log.info("token: {}", token);
         PasswordResetResponse response;
         PasswordResetToken resetToken = tokenRepository.findByToken(token);
 
         if(resetToken == null){
-            log.info("resetPassword started, traceId : {}", traceId);
             return passwordResetMapper.mapNoResetTokenFoundResponse(traceId);
         }
 
         if (resetToken.getExpiryDate().before(new Date())) {
-            log.info("resetPassword started, traceId : {}", traceId);
             return passwordResetMapper.mapTokenExpiredResponse(traceId);
         }
 
         UserDetails user = resetToken.getUser();
         user.setPassword(new BCryptPasswordEncoder().encode(newPassword));
+        user.setModifiedAt(LocalDateTime.now());
         userRepository.save(user);
         tokenRepository.delete(resetToken);
         response = passwordResetMapper.mapSuccessPasswordResetResponse(traceId);
-        log.info("resetPassword started, traceId : {}", traceId);
+        log.info("resetPassword ended, traceId : {}", traceId);
         return response;
     }
 }

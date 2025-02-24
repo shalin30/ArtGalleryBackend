@@ -1,6 +1,7 @@
 package org.example.mapper;
 
 import org.example.entity.ArtPiece;
+import org.example.entity.Categories;
 import org.example.json.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -71,11 +72,18 @@ class ArtPieceResponseMapperTest {
 
     public ArtPiece getArtPiece(){
         ArtPiece artPiece = new ArtPiece();
+        Categories categories = new Categories();
+        categories.setName("test name");
         artPiece.setArtId(1);
         artPiece.setTitle("test title");
         artPiece.setDescription("test description");
         artPiece.setImageUrl("https://test.png");
         artPiece.setPrice(10.00);
+        artPiece.setArtist("test Artist");
+        artPiece.setYear(2022);
+        artPiece.setDimensions("20 * 20 inches");
+        artPiece.setMedium("test medium");
+        artPiece.setCategory(categories);
         return artPiece;
     }
 

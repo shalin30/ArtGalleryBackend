@@ -5,19 +5,15 @@ import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.example.entity.BlacklistedToken;
 import org.example.entity.UserDetails;
-import org.example.json.UserCreationRequest;
-import org.example.json.UserCreationResponse;
-import org.example.json.ValidationResponse;
+import org.example.json.*;
 import org.example.mapper.UserResponseMapper;
 import org.example.repository.BlacklistRepository;
 import org.example.repository.UserRepository;
 import org.example.security.JwtTokenProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -86,11 +82,6 @@ public class UserOrchestratorService extends BaseFieldValidationService{
                 UserDetails userDetails = new UserDetails();
                 userDetails.setUserName(userCreationRequest.getUserName());
                 userDetails.setEmail(userCreationRequest.getEmail());
-                userDetails.setAddress1(userCreationRequest.getAddress1());
-                userDetails.setAddress2(userCreationRequest.getAddress2());
-                userDetails.setCity(userCreationRequest.getCity());
-                userDetails.setState(userCreationRequest.getState());
-                userDetails.setPostalCode(userCreationRequest.getPostalCode());
                 userDetails.setCreatedAt(LocalDateTime.now());
                 userDetails.setModifiedAt(LocalDateTime.now());
 
@@ -121,11 +112,6 @@ public class UserOrchestratorService extends BaseFieldValidationService{
             if(user != null) {
                 if (userCreationRequest.getUserName() != null) user.setUserName(userCreationRequest.getUserName());
                 if (userCreationRequest.getEmail() != null) user.setEmail(userCreationRequest.getEmail());
-                if (userCreationRequest.getAddress1() != null) user.setAddress1(userCreationRequest.getAddress1());
-                if (userCreationRequest.getAddress2() != null) user.setAddress2(userCreationRequest.getAddress2());
-                if (userCreationRequest.getCity() != null) user.setCity(userCreationRequest.getCity());
-                if (userCreationRequest.getState() != null) user.setState(userCreationRequest.getState());
-                if (userCreationRequest.getPostalCode() != null) user.setPostalCode(userCreationRequest.getPostalCode());
                 if(userCreationRequest.getPassword() != null) {
                     String hashedPassword = passwordEncoder.encode(userCreationRequest.getPassword());
                     user.setPassword(hashedPassword);
@@ -159,23 +145,61 @@ public class UserOrchestratorService extends BaseFieldValidationService{
         return response;
     }
 
-    public String login(String username, String password, String traceId) {
-        log.info("login service started, traceId: {}", traceId);
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+    public LoginResponse login(String username, String password, String traceId) {
+        log.info("Login service started, traceId: {}", traceId);
+        LoginResponse response = new LoginResponse();
 
-        List<String> roles = authentication.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
-        String token = jwtTokenProvider.generateToken(username, roles);
-        log.info("login service ended, traceId: {}", traceId);
-        return token;
+            if (authentication != null && authentication.isAuthenticated()) {
+                org.springframework.security.core.userdetails.User userDetails = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+
+                String userName = userDetails.getUsername();
+
+                UserDetails user = userRepository.findByUserName(userName);
+                String userId = null;
+                String name = null;
+                if(user != null){
+                    userId = String.valueOf(user.getUserId());
+                    name = user.getUserName();
+                }
+
+                List<String> roles = authentication.getAuthorities()
+                        .stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList());
+
+                String token = jwtTokenProvider.generateToken(username, roles);
+
+                response.setToken(token);
+                response.setUserId(userId);
+                response.setUserName(name);
+                response.setStatus(HttpStatus.OK);
+
+                log.info("Login successful for userId: {}, traceId: {}", userId, traceId);
+            } else {
+                log.warn("Authentication failed for username: {}, traceId: {}", username, traceId);
+                response.setToken(null);
+                response.setUserId(null);
+                response.setUserName(null);
+                response.setStatus(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            log.error("Login service encountered an error, traceId: {}, error: {}", traceId, e.getMessage());
+            response.setToken(null);
+            response.setUserId(null);
+            response.setUserName(null);
+            response.setStatus(HttpStatus.NOT_FOUND);
+        }
+
+        log.info("Login service ended, traceId: {}", traceId);
+        return response;
     }
 
-    public UserCreationResponse logout(String authHeader, String traceId) {
+    public LogoutResponse logout(String authHeader, String traceId) {
         log.info("logout service started, traceId: {}", traceId);
-        UserCreationResponse response;
+        LogoutResponse response;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             Claims claims = Jwts.parser()
@@ -189,7 +213,7 @@ public class UserOrchestratorService extends BaseFieldValidationService{
         } else {
             response = userResponseMapper.mapLogOutFailureResponse(traceId);
         }
-        log.info("logout service started, traceId: {}", traceId);
+        log.info("logout service ended, traceId: {}", traceId);
         return response;
     }
 }

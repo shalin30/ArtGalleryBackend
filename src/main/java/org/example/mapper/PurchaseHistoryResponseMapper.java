@@ -30,6 +30,12 @@ public class PurchaseHistoryResponseMapper {
             response1.setOrderId(Long.valueOf(order.getOrderId()));
             response1.setOrderDate(String.valueOf(order.getOrderDate()));
             response1.setTotalAmount(order.getTotalAmount());
+            response1.setAddress1(order.getAddress1());
+            response1.setAddress2(order.getAddress2());
+            response1.setCity(order.getCity());
+            response1.setState(order.getState());
+            response1.setPostalCode(order.getPostalCode());
+            response1.setPhoneNumber(order.getPhoneNumber());
             if(order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
                 for (OrderItem orderItem : order.getOrderItems()){
                     item = new PurchaseItem();

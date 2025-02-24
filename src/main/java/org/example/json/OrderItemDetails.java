@@ -10,5 +10,7 @@ import lombok.NoArgsConstructor;
 public class OrderItemDetails {
     private String artPieceId;
     private String price;
-
+    private String artTitle;
+    private String quantity;
+    private String imageUrl;
 }

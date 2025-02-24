@@ -72,16 +72,24 @@ class UserResponseMapperTest {
         Assertions.assertEquals("Field validation failed",response.getMessage());
     }
 
+    @Test
+    public void testMapLogOutFailureResponse(){
+        LogoutResponse response = mapper.mapLogOutFailureResponse(traceId);
+        Assertions.assertEquals("Invalid token", response.getMessage());
+    }
+
+    @Test
+    public void testMapLogOutSuccessResponse(){
+        LogoutResponse response = mapper.mapLogOutSuccessResponse(traceId);
+        Assertions.assertEquals("Logout successful", response.getMessage());
+    }
+
     public UserDetails getUserDetails(){
         userDetails = new UserDetails();
         userDetails.setUserId(1);
         userDetails.setUserName("test user");
-        userDetails.setCity("test city");
         userDetails.setEmail("abc@gmail.com");
-        userDetails.setState("test state");
-        userDetails.setAddress1("test address 1");
-        userDetails.setAddress2("test address 2");
-        userDetails.setPostalCode("123456");
         return userDetails;
     }
+
 }

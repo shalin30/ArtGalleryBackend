@@ -1,35 +1,52 @@
 package org.example.controller;
 
-import org.example.json.ArtCategoryRequest;
-import org.example.json.ArtCategoryResponse;
-import org.example.json.ArtPieceRequest;
-import org.example.json.ArtPieceResponse;
+import org.example.entity.Cart;
+import org.example.json.*;
 import org.example.service.ArtCategoryOrchestratorService;
 import org.example.service.ArtPieceOrchestratorService;
+import org.example.service.CartService;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
+import static org.mockito.ArgumentMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class ArtControllerTest {
+
 
     @Mock
     ArtCategoryOrchestratorService artCategoryOrchestratorService;
 
     @Mock
     ArtPieceOrchestratorService artPieceOrchestratorService;
+
+    @Mock
+    CartService cartService;
 
     @InjectMocks
     ArtController artController;
@@ -39,6 +56,11 @@ class ArtControllerTest {
     ArtPieceResponse artPieceResponse;
 
     String traceId = UUID.randomUUID().toString();
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this); // Initializes @Mock annotated fields
+    }
 
     @Test
     public void testInsertArtCategory(){
@@ -164,6 +186,89 @@ class ArtControllerTest {
         Mockito.when(artCategoryOrchestratorService.deleteArtCategory(anyString(),anyString())).thenReturn(artCategoryResponse);
         ResponseEntity<ArtCategoryResponse> response = artController.deleteArtCategory("1", traceId);
         Assertions.assertEquals(HttpStatus.OK, Objects.requireNonNull(response.getBody()).getStatus());
+    }
+
+    @Test
+    public void testGetUserCart(){
+        List<CartResponse> responses = new ArrayList<>();
+        CartResponse  cartResponse= new CartResponse();
+        cartResponse.setArtName("test art");
+        responses.add(cartResponse);
+        Mockito.when(cartService.getCartForUser(anyInt(),anyString())).thenReturn(responses);
+        ResponseEntity<List<CartResponse>> response = artController.getUserCart(1, traceId);
+        Assertions.assertEquals("test art", Objects.requireNonNull(response.getBody()).get(0).getArtName());
+    }
+
+    @Test
+    public void testGetUserCartWithNullResponse(){
+        Mockito.when(cartService.getCartForUser(anyInt(),anyString())).thenReturn(null);
+        ResponseEntity<List<CartResponse>> response = artController.getUserCart(1, traceId);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void testSyncCart() {
+        List<CartItem> cartItems = new ArrayList<>();
+
+        Mockito.doNothing().when(cartService).syncCart(anyInt(), anyList(), anyString());
+        ResponseEntity<Void> response = artController.syncCart(1, cartItems, traceId);
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        Mockito.verify(cartService).syncCart(eq(1), eq(cartItems), eq(traceId));
+    }
+
+    @Test
+    public void testUploadImageWithSuccess() throws Exception {
+        MockMultipartFile multipartFile = new MockMultipartFile(
+                "image.jpg",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes(StandardCharsets.UTF_8)
+        );
+        Mockito.when(artPieceOrchestratorService.uploadImageAndSetUrl(anyInt(), any(MultipartFile.class))).thenReturn("https://image.jpg");
+        ResponseEntity<String> response = artController.uploadImage(1,multipartFile);
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    public void testUploadImageWithNullResponse() throws Exception {
+        MockMultipartFile multipartFile = new MockMultipartFile(
+                "image.jpg",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes(StandardCharsets.UTF_8)
+        );
+        Mockito.when(artPieceOrchestratorService.uploadImageAndSetUrl(anyInt(), any(MultipartFile.class))).thenReturn(null);
+        ResponseEntity<String> response = artController.uploadImage(1,multipartFile);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void testUploadImageWithFailedToUpload() throws Exception {
+        MockMultipartFile multipartFile = new MockMultipartFile(
+                "image.jpg",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        Mockito.when(artPieceOrchestratorService.uploadImageAndSetUrl(1, multipartFile)).thenThrow(new IOException("Image upload failed!"));
+        ResponseEntity<String> response = artController.uploadImage(1,multipartFile);
+        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    public void testUploadImageWithRuntimeException() throws Exception {
+        MockMultipartFile multipartFile = new MockMultipartFile(
+                "image.jpg",
+                "image.jpg",
+                "image/jpeg",
+                "test image content".getBytes(StandardCharsets.UTF_8)
+        );
+
+        Mockito.when(artPieceOrchestratorService.uploadImageAndSetUrl(1, multipartFile)).thenThrow(new RuntimeException());
+        ResponseEntity<String> response = artController.uploadImage(1,multipartFile);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
 }

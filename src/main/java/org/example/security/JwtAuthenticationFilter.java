@@ -1,6 +1,8 @@
 package org.example.security;
 
 import org.example.repository.BlacklistRepository;
+import org.example.repository.UserRepository; // Add your user repository
+import org.example.entity.UserDetails; // Replace with your actual User entity class
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,10 +22,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final BlacklistRepository blacklistRepository;
+    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, BlacklistRepository blacklistRepository) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, BlacklistRepository blacklistRepository, UserRepository userRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.blacklistRepository = blacklistRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -39,27 +43,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is blacklisted");
                 return;
             }
+
             String username = jwtTokenProvider.getUsernameFromToken(token);
-            System.out.println("Username: " + username);
-            List<String> roles = jwtTokenProvider.getRolesFromToken(token);
-            System.out.println("Roles: " + roles);
+            UserDetails user = userRepository.findByUserName(username);
 
-            List<GrantedAuthority> authorities = roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
-            System.out.println("Authorities: " + authorities);
+            if (user != null) {
+                List<String> roles = jwtTokenProvider.getRolesFromToken(token);
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);  // Assuming no credentials are needed here
+                List<GrantedAuthority> authorities = roles.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user.getUserId(), null, authorities);
 
-            Authentication authenticationInContext = SecurityContextHolder.getContext().getAuthentication();
-            if (authenticationInContext != null) {
-                for (GrantedAuthority authority : authenticationInContext.getAuthorities()) {
-                    System.out.println("Authority in context: " + authority.getAuthority());
-                }
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);

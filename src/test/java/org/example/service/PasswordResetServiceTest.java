@@ -66,7 +66,7 @@ class PasswordResetServiceTest {
 
         when(userRepository.findByEmail(anyString())).thenReturn(userDetails);
         when(tokenRepository.save(any(PasswordResetToken.class))).thenReturn(null);
-        Mockito.doNothing().when(emailService).sendEmail(anyString(),anyString(), anyString());
+        Mockito.doNothing().when(emailService).sendEmail(anyString(),anyString(), anyString(), anyBoolean());
         when(mapper.mapSuccessResponse(anyString())).thenReturn(passwordResetResponse);
         PasswordResetResponse response = service.sendPasswordResetLink("email", traceId);
         assertEquals("mail send successfully", response.getMessage());

@@ -22,7 +22,10 @@ public class ArtPieceFieldValidationService extends BaseFieldValidationService {
         addErrorToList(Title.isValid(artPieceRequest.getTitle()), errorList);
         addErrorToList(Description.isValid(artPieceRequest.getDescription()), errorList);
         addErrorToList(Price.isValid(String.valueOf(artPieceRequest.getPrice())), errorList);
-        addErrorToList(ImageUrl.isValid(artPieceRequest.getImageUrl()), errorList);
+        addErrorToList(Name.isValid(artPieceRequest.getArtist()), errorList);
+        addErrorToList(Year.isValid(artPieceRequest.getYear()), errorList);
+        addErrorToList(Dimensions.isValid(String.valueOf(artPieceRequest.getDimensions())), errorList);
+        addErrorToList(Medium.isValid(artPieceRequest.getMedium()), errorList);
 
         ValidationResponse validationResponse = prepareValidationMessage(errorList);
         log.info("ArtPieceFieldValidationService started, traceId: {}", traceId);
@@ -37,7 +40,10 @@ public class ArtPieceFieldValidationService extends BaseFieldValidationService {
         if(artPieceRequest.getTitle() != null) addErrorToList(Title.isValid(artPieceRequest.getTitle()), errorList);
         if(artPieceRequest.getDescription() != null) addErrorToList(Description.isValid(artPieceRequest.getDescription()), errorList);
         if(artPieceRequest.getPrice() != null) addErrorToList(Price.isValid(String.valueOf(artPieceRequest.getPrice())), errorList);
-        if(artPieceRequest.getImageUrl() != null) addErrorToList(ImageUrl.isValid(artPieceRequest.getImageUrl()), errorList);
+        if(artPieceRequest.getArtist() != null) addErrorToList(Name.isValid(artPieceRequest.getArtist()), errorList);
+        if(artPieceRequest.getYear() != null) addErrorToList(Year.isValid(artPieceRequest.getYear()), errorList);
+        if(artPieceRequest.getDimensions() != null) addErrorToList(Dimensions.isValid((artPieceRequest.getDimensions())), errorList);
+        if(artPieceRequest.getMedium() != null) addErrorToList(Medium.isValid(artPieceRequest.getMedium()), errorList);
 
         ValidationResponse validationResponse = prepareValidationMessage(errorList);
         log.info("updateArtPieceFieldValidation started, traceId: {}", traceId);

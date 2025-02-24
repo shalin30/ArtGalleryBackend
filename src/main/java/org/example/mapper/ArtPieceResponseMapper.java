@@ -14,12 +14,16 @@ public class ArtPieceResponseMapper {
     public ArtPieceResponse mapSuccessResponse(ArtPiece artPiece, String traceId) {
         log.info("map success response started, traceId: {}", traceId);
         ArtPieceResponse response = new ArtPieceResponse();
-        response.setArtId(artPiece.getArtId().toString());
+        response.setArtId(artPiece.getArtId());
         response.setTitle(artPiece.getTitle());
         response.setDescription(artPiece.getDescription());
-        response.setImageUrl(artPiece.getImageUrl());
         response.setPrice(artPiece.getPrice());
+        response.setArtist(artPiece.getArtist());
+        response.setYear(artPiece.getYear().toString());
+        response.setDimensions(artPiece.getDimensions());
+        response.setMedium(artPiece.getMedium());
         response.setStatus(HttpStatus.OK);
+        response.setCategory(artPiece.getCategory().getName());
         response.setMessage("Art Piece added successfully..!!");
         log.info("map success response ended, traceId: {}", traceId);
         return response;
@@ -38,12 +42,16 @@ public class ArtPieceResponseMapper {
     public ArtPieceResponse mapUpdateSuccessResponse(ArtPiece artPiece, String traceId) {
         log.info("map update success response started, traceId: {}", traceId);
         ArtPieceResponse response = new ArtPieceResponse();
-        response.setArtId(artPiece.getArtId().toString());
+        response.setArtId(artPiece.getArtId());
         response.setTitle(artPiece.getTitle());
         response.setDescription(artPiece.getDescription());
-        response.setImageUrl(artPiece.getImageUrl());
         response.setPrice(artPiece.getPrice());
+        response.setArtist(artPiece.getArtist());
+        response.setYear(artPiece.getYear().toString());
+        response.setDimensions(artPiece.getDimensions());
+        response.setMedium(artPiece.getMedium());
         response.setStatus(HttpStatus.OK);
+        response.setCategory(artPiece.getCategory().getName());
         response.setMessage("Art Piece updated successfully..!!");
         log.info("map update success response ended, traceId: {}", traceId);
         return response;

@@ -21,12 +21,6 @@ public class UserFieldValidationService extends BaseFieldValidationService{
 
         addErrorToList(Name.isValid(userCreationRequest.getUserName()), errorList);
         addErrorToList(Email.isValid(userCreationRequest.getEmail()), errorList);
-        addErrorToList(Address.isValid(userCreationRequest.getAddress1()), errorList);
-        addErrorToList(Address.isValid(userCreationRequest.getAddress2()), errorList);
-        addErrorToList(City.isValid(userCreationRequest.getCity()), errorList);
-        addErrorToList(State.isValid(userCreationRequest.getState()), errorList);
-        addErrorToList(PostalCode.isValid(userCreationRequest.getPostalCode()), errorList);
-
         ValidationResponse validationResponse = prepareValidationMessage(errorList);
         log.info("userRegistrationFieldValidation started, traceId: {}", traceId);
         return validationResponse;
@@ -39,11 +33,6 @@ public class UserFieldValidationService extends BaseFieldValidationService{
 
         if(userCreationRequest.getUserName() != null) addErrorToList(Name.isValid(userCreationRequest.getUserName()), errorList);
         if(userCreationRequest.getEmail() != null) addErrorToList(Email.isValid(userCreationRequest.getEmail()), errorList);
-        if(userCreationRequest.getAddress1() != null) addErrorToList(Address.isValid(userCreationRequest.getAddress1()), errorList);
-        if(userCreationRequest.getAddress2() != null) addErrorToList(Address.isValid(userCreationRequest.getAddress2()), errorList);
-        if(userCreationRequest.getCity() != null) addErrorToList(City.isValid(userCreationRequest.getCity()), errorList);
-        if(userCreationRequest.getState() != null) addErrorToList(State.isValid(userCreationRequest.getState()), errorList);
-        if(userCreationRequest.getPostalCode() != null) addErrorToList(PostalCode.isValid(userCreationRequest.getPostalCode()), errorList);
 
         ValidationResponse validationResponse = prepareValidationMessage(errorList);
         log.info("update user field validation service started, traceId: {}", traceId);

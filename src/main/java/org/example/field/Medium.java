@@ -2,11 +2,11 @@ package org.example.field;
 
 import java.util.regex.Pattern;
 
-public class Description {
-    private static final String validPattern = "^[A-Za-z0-9,.'\\- ]+$";
-    private static final String[] errorMessage = {"reqArtDescription","errArtDescription"};
+public class Medium {
+    private static final String validPattern = "^([a-zA-Z](\\. |[\\-'\\. ])?)+$";
+    private static final String[] errorMessage = {"reqArtMedium","errArtMedium"};
     private static final Pattern pattern = Pattern.compile(validPattern);
-    private static final int MAX_LENGTH = 500;
+    private static final int MAX_LENGTH = 30;
 
     public static String isValid(String value) {
         if(value == null || value.isEmpty()){

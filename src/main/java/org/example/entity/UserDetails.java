@@ -29,21 +29,6 @@ public class UserDetails {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "address1")
-    private String address1;
-
-    @Column(name = "address2")
-    private String address2;
-
-    @Column(name = "city")
-    private String city;
-
-    @Column(name = "state")
-    private String state;
-
-    @Column(name = "postal_code")
-    private String postalCode;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -58,4 +43,7 @@ public class UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Order> orders;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Cart> cartItems;
 }

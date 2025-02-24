@@ -16,11 +16,6 @@ public class UserResponseMapper {
         response.setUserId(userDetails.getUserId().toString());
         response.setUserName(userDetails.getUserName());
         response.setEmail(userDetails.getEmail());
-        response.setAddress1(userDetails.getAddress1());
-        response.setAddress2(userDetails.getAddress2());
-        response.setCity(userDetails.getCity());
-        response.setState(userDetails.getState());
-        response.setPostalCode(userDetails.getPostalCode());
         response.setStatus(HttpStatus.OK);
         response.setMessage("User created successfully..!!");
         log.info("map success response ended, traceId: {}", traceId);
@@ -33,11 +28,6 @@ public class UserResponseMapper {
         response.setUserId(userDetails.getUserId().toString());
         response.setUserName(userDetails.getUserName());
         response.setEmail(userDetails.getEmail());
-        response.setAddress1(userDetails.getAddress1());
-        response.setAddress2(userDetails.getAddress2());
-        response.setCity(userDetails.getCity());
-        response.setState(userDetails.getState());
-        response.setPostalCode(userDetails.getPostalCode());
         response.setStatus(HttpStatus.OK);
         response.setMessage("User updated successfully..!!");
         log.info("map update success response ended, traceId: {}", traceId);
@@ -90,18 +80,18 @@ public class UserResponseMapper {
         return response;
     }
 
-    public UserCreationResponse mapLogOutSuccessResponse(String traceId) {
+    public LogoutResponse mapLogOutSuccessResponse(String traceId) {
         log.info("map logout success response started, traceId: {}", traceId);
-        UserCreationResponse response = new UserCreationResponse();
+        LogoutResponse response = new LogoutResponse();
         response.setStatus(HttpStatus.OK);
         response.setMessage("Logout successful");
         log.info("map logout success response ended, traceId: {}", traceId);
         return response;
     }
 
-    public UserCreationResponse mapLogOutFailureResponse(String traceId) {
+    public LogoutResponse mapLogOutFailureResponse(String traceId) {
         log.info("map logout failure response started, traceId: {}", traceId);
-        UserCreationResponse response = new UserCreationResponse();
+        LogoutResponse response = new LogoutResponse();
         response.setStatus(HttpStatus.UNAUTHORIZED);
         response.setMessage("Invalid token");
         log.info("map logout failure response ended, traceId: {}", traceId);

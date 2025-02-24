@@ -31,7 +31,7 @@ public class PasswordResetMapper {
         log.info("map no reset token found response started, traceId: {}", traceId);
         PasswordResetResponse response = new PasswordResetResponse();
         response.setStatus(HttpStatus.NOT_FOUND);
-        response.setMessage("No reset token found");
+        response.setMessage("This link to reset password is either invalid or already used");
         log.info("map no reset token found response ended, traceId: {}", traceId);
         return response;
     }
@@ -40,7 +40,7 @@ public class PasswordResetMapper {
         log.info("map token expired response started, traceId: {}", traceId);
         PasswordResetResponse response = new PasswordResetResponse();
         response.setStatus(HttpStatus.UNAUTHORIZED);
-        response.setMessage("Token expired");
+        response.setMessage("The link to reset password is expired");
         log.info("map token expired response ended, traceId: {}", traceId);
         return response;
     }

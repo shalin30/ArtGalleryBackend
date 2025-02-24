@@ -10,6 +10,12 @@ public class PurchaseHistoryResponse {
     private Long orderId;
     private String orderDate;
     private Double totalAmount;
+    private String address1;
+    private String address2;
+    private String city;
+    private String state;
+    private String postalCode;
+    private String phoneNumber;
     private List<PurchaseItem> items;
     private HttpStatus status;
     private String message;

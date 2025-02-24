@@ -31,13 +31,13 @@ class PasswordResetMapperTest {
     @Test
     public void testMapNoResetTokenFoundResponse(){
         PasswordResetResponse response = mapper.mapNoResetTokenFoundResponse(traceId);
-        Assertions.assertEquals("No reset token found", response.getMessage());
+        Assertions.assertEquals("This link to reset password is either invalid or already used", response.getMessage());
     }
 
     @Test
     public void testMapTokenExpiredResponse(){
         PasswordResetResponse response = mapper.mapTokenExpiredResponse(traceId);
-        Assertions.assertEquals("Token expired", response.getMessage());
+        Assertions.assertEquals("The link to reset password is expired", response.getMessage());
     }
 
     @Test

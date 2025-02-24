@@ -37,12 +37,65 @@ class PurchaseHistoryResponseMapperTest {
         order.setOrderId(1);
         order.setOrderDate(LocalDateTime.now());
         order.setTotalAmount(10.00);
+        order.setAddress1("test address1");
+        order.setAddress2("test address2");
+        order.setCity("test city");
+        order.setState("test state");
+        order.setPostalCode("123456");
+        order.setPhoneNumber("1234567890");
         artPiece.setTitle("test title");
         orderItem.setArtPiece(artPiece);
         orderItem.setQuantity(1);
         orderItem.setPrice(10.00);
         orderItems.add(orderItem);
         order.setOrderItems(orderItems);
+        orders.add(order);
+
+        List<PurchaseHistoryResponse> purchaseHistoryResponseList = mapper.mapOrders(orders, traceId);
+        Assertions.assertEquals(1, purchaseHistoryResponseList.get(0).getOrderId());
+    }
+
+    @Test
+    public void testMapOrdersWithEmptyOrderItems(){
+        orders = new ArrayList<>();
+        order = new Order();
+        orderItems = new ArrayList<>();
+        artPiece = new ArtPiece();
+        order.setOrderId(1);
+        order.setOrderDate(LocalDateTime.now());
+        order.setTotalAmount(10.00);
+        order.setAddress1("test address1");
+        order.setAddress2("test address2");
+        order.setCity("test city");
+        order.setState("test state");
+        order.setPostalCode("123456");
+        order.setPhoneNumber("1234567890");
+        artPiece.setTitle("test title");
+        order.setOrderItems(orderItems);
+        orders.add(order);
+
+        List<PurchaseHistoryResponse> purchaseHistoryResponseList = mapper.mapOrders(orders, traceId);
+        Assertions.assertEquals(1, purchaseHistoryResponseList.get(0).getOrderId());
+    }
+
+    @Test
+    public void testMapOrdersWithNullOrderItems(){
+        orders = new ArrayList<>();
+        order = new Order();
+        orderItems = new ArrayList<>();
+        orderItem = new OrderItem();
+        artPiece = new ArtPiece();
+        order.setOrderId(1);
+        order.setOrderDate(LocalDateTime.now());
+        order.setTotalAmount(10.00);
+        order.setAddress1("test address1");
+        order.setAddress2("test address2");
+        order.setCity("test city");
+        order.setState("test state");
+        order.setPostalCode("123456");
+        order.setPhoneNumber("1234567890");
+        artPiece.setTitle("test title");
+        order.setOrderItems(null);
         orders.add(order);
 
         List<PurchaseHistoryResponse> purchaseHistoryResponseList = mapper.mapOrders(orders, traceId);

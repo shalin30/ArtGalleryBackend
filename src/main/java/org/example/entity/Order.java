@@ -36,6 +36,24 @@ public class Order {
     @Column(name = "status", nullable = false)
     private OrderStatus status;
 
+    @Column(name = "address1")
+    private String address1;
+
+    @Column(name = "address2")
+    private String address2;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "state")
+    private String state;
+
+    @Column(name = "postal_code")
+    private String postalCode;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

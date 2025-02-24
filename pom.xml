@@ -141,6 +141,11 @@
             <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.37.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -200,6 +205,7 @@
                                 <exclude>org/example/enums/**</exclude>
                                 <exclude>org/example/json/**</exclude>
                                 <exclude>org/example/security/**</exclude>
+                                <exclude>org/example/utils/**</exclude>
                                 <exclude>org/example/Main.class</exclude>
                             </excludes>
                         </configuration>

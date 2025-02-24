@@ -1,7 +1,6 @@
 package org.example.repository;
 
 import org.example.entity.UserDetails;
-import org.example.json.UserData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

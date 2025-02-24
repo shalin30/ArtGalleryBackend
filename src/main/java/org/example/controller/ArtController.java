@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.json.*;
 import org.example.json.Response;
 import org.example.service.*;
+import org.example.utils.JasonObjectConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -24,9 +27,15 @@ public class ArtController {
     @Autowired
     ArtPieceOrchestratorService artPieceOrchestratorService;
 
-    public ArtController(ArtCategoryOrchestratorService artCategoryOrchestratorService, ArtPieceOrchestratorService artPieceOrchestratorService) {
+    @Autowired
+    private CartService cartService;
+
+
+    public ArtController(ArtCategoryOrchestratorService artCategoryOrchestratorService, ArtPieceOrchestratorService artPieceOrchestratorService,
+                         CartService cartService) {
         this.artCategoryOrchestratorService = artCategoryOrchestratorService;
         this.artPieceOrchestratorService = artPieceOrchestratorService;
+        this.cartService = cartService;
     }
 
     @PostMapping("/admin/insert-art-category")
@@ -63,8 +72,8 @@ public class ArtController {
     public ResponseEntity<List<ArtCategoryResponse>> getArtCategories(@RequestHeader(required = false, name = "TraceId") String traceId){
         log.info("getArtCategories Controller started, traceId : {}", traceId);
         List<ArtCategoryResponse> response = artCategoryOrchestratorService.getArtCategories(traceId);
-        log.info("getArtCategories Controller ended, traceId : {}", traceId);
-        if(response == null || response.isEmpty() || response.get(0).getStatus().equals(HttpStatus.NOT_FOUND)){
+        log.info("getArtCategories Controller ended, response : {}, traceId : {}", JasonObjectConverter.convertJasonObjectToString(response), traceId);
+        if(response == null || response.isEmpty() || (response.get(0).getStatus() != null && response.get(0).getStatus().equals(HttpStatus.NOT_FOUND))){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -100,16 +109,16 @@ public class ArtController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    @GetMapping("/categories/{categoryId}")
+    @GetMapping("/categories/{categoryId}/artpieces")
     public ResponseEntity<List<ArtPieceResponse>> getArtPieces(@PathVariable String categoryId,
                                                                @RequestHeader(required = false, name = "TraceId") String traceId){
         log.info("getArtPieces Controller started, traceId : {}", traceId);
         List<ArtPieceResponse> response = artPieceOrchestratorService.getArtPieces(categoryId, traceId);
-        log.info("getArtPieces Controller ended, traceId : {}", traceId);
-        if(response != null){
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+        log.info("getArtPieces Controller ended, response : {}, traceId : {}", JasonObjectConverter.convertJasonObjectToString(response), traceId);
+        if(response == null || response.isEmpty() || (response.get(0).getStatus() != null && response.get(0).getStatus().equals(HttpStatus.NOT_FOUND))){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/pieces/{artId}")
@@ -117,10 +126,44 @@ public class ArtController {
                                                                @RequestHeader(required = false, name = "TraceId") String traceId){
         log.info("getArtPiece Controller started, traceId : {}", traceId);
         ArtPieceResponse response = artPieceOrchestratorService.getArtPiece(artId, traceId);
-        log.info("getArtPiece Controller ended, traceId : {}", traceId);
-        if(response != null){
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+        log.info("getArtPiece Controller ended, response : {}, traceId : {}", JasonObjectConverter.convertJasonObjectToString(response), traceId);
+        if(response == null || (response.getStatus() != null && response.getStatus().equals(HttpStatus.NOT_FOUND))){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("user/cart/{userId}")
+    public ResponseEntity<List<CartResponse>> getUserCart(@PathVariable Integer userId, @RequestHeader(required = false, name = "TraceId") String traceId) {
+        log.info("getUserCart Controller started, traceId : {}", traceId);
+        List<CartResponse> responses = cartService.getCartForUser(userId, traceId);
+        log.info("getUserCart Controller ended, traceId : {}", traceId);
+        if(responses == null || (responses.isEmpty()  || (responses.get(0).getStatus() != null && responses.get(0).getStatus().equals(HttpStatus.NOT_FOUND)))){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responses);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(responses);
+    }
+
+    @PostMapping("cart/update/{userId}")
+    public ResponseEntity<Void> syncCart(@PathVariable Integer userId, @RequestBody List<CartItem> cartItems, @RequestHeader(required = false, name = "TraceId") String traceId) {
+        log.info("syncCart Controller started, traceId : {}", traceId);
+        cartService.syncCart(userId, cartItems, traceId);
+        log.info("syncCart Controller completed, traceId : {}", traceId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("admin/{artId}/uploadImage")
+    public ResponseEntity<String> uploadImage(@PathVariable Integer artId, @RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = artPieceOrchestratorService.uploadImageAndSetUrl(artId, file);
+            if(imageUrl != null || !imageUrl.isEmpty()) {
+                return ResponseEntity.ok(imageUrl);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(imageUrl);
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Image upload failed!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
     }
 }

@@ -5,27 +5,29 @@ import org.example.entity.Order;
 import org.example.entity.OrderItem;
 import org.example.entity.UserDetails;
 import org.example.enums.OrderStatus;
-import org.example.json.OrderItemRequest;
-import org.example.json.OrderRequest;
-import org.example.json.OrderResponse;
+import org.example.json.*;
 import org.example.mapper.OrderResponseMapper;
 import org.example.repository.ArtPieceRepository;
+import org.example.repository.CartRepository;
 import org.example.repository.OrderRepository;
 import org.example.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+
+import static org.mockito.ArgumentMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderOrchestratorServiceTest {
@@ -40,11 +42,22 @@ class OrderOrchestratorServiceTest {
     OrderRepository orderRepository;
 
     @Mock
+    CartRepository cartRepository;
+
+    @Mock
     OrderResponseMapper mapper;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     OrderOrchestratorService orderOrchestratorService;
     String traceId = UUID.randomUUID().toString();
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
     @Test
     public void testCreateOrder(){
@@ -54,6 +67,13 @@ class OrderOrchestratorServiceTest {
         orderRequest.setUserId("1");
         orderItemRequest.setQuantity("1");
         orderItemRequest.setArtPieceId("1");
+        orderRequest.setAddress1("test address1");
+        orderRequest.setAddress2("test address2");
+        orderRequest.setCity("test city");
+        orderRequest.setState("test state");
+        orderRequest.setPostalCode("123456");
+        orderRequest.setPhoneNumber("1234567890");
+        orderRequest.setTotalAmount("123.56");
         orderItemRequests.add(orderItemRequest);
         orderRequest.setArtPieceDetails(orderItemRequests);
 
@@ -64,6 +84,7 @@ class OrderOrchestratorServiceTest {
         List<OrderItem> orderItems = new ArrayList<>();
         OrderItem orderItem = new OrderItem();
         orderItem.setPrice(10.00);
+        orderItem.setQuantity(1);
         orderItem.setArtPiece(artPiece);
         orderItems.add(orderItem);
 
@@ -80,6 +101,9 @@ class OrderOrchestratorServiceTest {
         Mockito.when(userRepository.findByUserId(anyInt())).thenReturn(new UserDetails());
         Mockito.when(artPieceRepository.findByArtId(anyInt())).thenReturn(artPiece);
         Mockito.when(orderRepository.save(Mockito.any(Order.class))).thenReturn(savedOrder);
+        Mockito.doNothing().when(cartRepository).deleteByUserId(anyInt());
+        Mockito.doNothing().when(emailService).sendEmail(eq(savedOrder.getUser().getEmail()), eq("Art Gallery Order Confirmation"), anyString(), eq(true)
+        );
         OrderResponse orderResponse = orderOrchestratorService.createOrder(orderRequest, traceId);
         Assertions.assertEquals("1", orderResponse.getUserId());
     }
@@ -90,6 +114,12 @@ class OrderOrchestratorServiceTest {
         List<OrderItemRequest> orderItemRequests = new ArrayList<>();
         OrderItemRequest orderItemRequest = new OrderItemRequest();
         orderRequest.setUserId("1");
+        orderRequest.setAddress1("test address1");
+        orderRequest.setAddress2("test address2");
+        orderRequest.setCity("test city");
+        orderRequest.setState("test state");
+        orderRequest.setPostalCode("123456");
+        orderRequest.setPhoneNumber("1234567890");
         orderItemRequest.setQuantity("1");
         orderItemRequest.setArtPieceId("1");
         orderItemRequests.add(orderItemRequest);
@@ -111,6 +141,12 @@ class OrderOrchestratorServiceTest {
         List<OrderItemRequest> orderItemRequests = new ArrayList<>();
         OrderItemRequest orderItemRequest = new OrderItemRequest();
         orderRequest.setUserId("1");
+        orderRequest.setAddress1("test address1");
+        orderRequest.setAddress2("test address2");
+        orderRequest.setCity("test city");
+        orderRequest.setState("test state");
+        orderRequest.setPostalCode("123456");
+        orderRequest.setPhoneNumber("1234567890");
         orderItemRequest.setQuantity("1");
         orderItemRequest.setArtPieceId("1");
         orderItemRequests.add(orderItemRequest);
@@ -135,6 +171,7 @@ class OrderOrchestratorServiceTest {
         OrderItem orderItem = new OrderItem();
         orderItem.setPrice(10.00);
         orderItem.setArtPiece(artPiece);
+        orderItem.setQuantity(2);
         orderItems.add(orderItem);
 
         UserDetails userDetails = new UserDetails();
@@ -174,6 +211,7 @@ class OrderOrchestratorServiceTest {
         OrderItem orderItem = new OrderItem();
         orderItem.setPrice(10.00);
         orderItem.setArtPiece(artPiece);
+        orderItem.setQuantity(2);
         orderItems.add(orderItem);
 
         UserDetails userDetails = new UserDetails();
@@ -212,6 +250,7 @@ class OrderOrchestratorServiceTest {
         OrderItem orderItem = new OrderItem();
         orderItem.setPrice(10.00);
         orderItem.setArtPiece(artPiece);
+        orderItem.setQuantity(2);
         orderItems.add(orderItem);
 
         UserDetails userDetails = new UserDetails();
@@ -248,5 +287,38 @@ class OrderOrchestratorServiceTest {
         Mockito.when(userRepository.findByUserId(anyInt())).thenReturn(null);
         List<OrderResponse> responses = orderOrchestratorService.getOrderByUserId("1", traceId);
         Assertions.assertEquals(HttpStatus.NOT_FOUND, responses.get(0).getHttpStatus());
+    }
+
+    @Test
+    public void testGetUserAddress(){
+        List<Order> orders = new ArrayList<>();
+        Order order = new Order();
+        order.setAddress1("test address");
+        orders.add(order);
+
+        Address address = new Address();
+        address.setAddress1("test address");
+
+        UserAddressResponse response = new UserAddressResponse();
+        response.setAddress(address);
+
+        Mockito.when(orderRepository.findLatestOrderByUserId(anyInt(), any(Pageable.class))).thenReturn(orders);
+        Mockito.when(mapper.mapPreviousAddressResponse(any(Order.class), anyString())).thenReturn(response);
+        UserAddressResponse userAddressResponse = orderOrchestratorService.getUserAddress("1", traceId);
+        Assertions.assertEquals("test address", userAddressResponse.getAddress().getAddress1());
+    }
+
+    @Test
+    public void testGetUserAddressWithNullOrder(){
+        Address address = new Address();
+        address.setAddress1("test address");
+
+        UserAddressResponse response = new UserAddressResponse();
+        response.setMessage("No user found");
+
+        Mockito.when(orderRepository.findLatestOrderByUserId(anyInt(), any(Pageable.class))).thenReturn(null);
+        Mockito.when(mapper.mapNoPreviousOrderFoundResponse(anyString())).thenReturn(response);
+        UserAddressResponse userAddressResponse = orderOrchestratorService.getUserAddress("1", traceId);
+        Assertions.assertEquals("No user found", userAddressResponse.getMessage());
     }
 }

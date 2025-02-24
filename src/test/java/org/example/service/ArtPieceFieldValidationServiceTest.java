@@ -40,6 +40,10 @@ class ArtPieceFieldValidationServiceTest {
         artPieceRequest.setPrice(null);
         artPieceRequest.setCategoryId(null);
         artPieceRequest.setImageUrl(null);
+        artPieceRequest.setArtist(null);
+        artPieceRequest.setYear(null);
+        artPieceRequest.setDimensions(null);
+        artPieceRequest.setMedium(null);
         ValidationResponse validationResponse = artPieceFieldValidationService.updateArtPieceFieldValidation(artPieceRequest, traceId);
         Assertions.assertEquals(Collections.EMPTY_LIST, validationResponse.getValidationErrors().getErrorList());
     }
@@ -52,6 +56,10 @@ class ArtPieceFieldValidationServiceTest {
         artPieceRequest.setPrice(BigDecimal.valueOf(10.00).setScale(2, BigDecimal.ROUND_HALF_UP));
         artPieceRequest.setCategoryId("1");
         artPieceRequest.setImageUrl("https://test.jpg");
+        artPieceRequest.setArtist("test Artist");
+        artPieceRequest.setYear("2022");
+        artPieceRequest.setDimensions("20 * 20 inches");
+        artPieceRequest.setMedium("test medium");
         return artPieceRequest;
     }
 }
